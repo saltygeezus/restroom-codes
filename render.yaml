@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: restroom-codes
+    runtime: python
+    plan: free
+    buildCommand: "echo no build"
+    startCommand: "python3 server.py"

@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CodeLoo – restroom door codes</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;color:#1f2937;height:100vh;display:flex;flex-direction:column}
+header{background:#0f766e;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header h1{font-size:18px;margin:0 8px 0 0}#q{flex:1;min-width:160px;padding:9px 12px;border-radius:10px;border:0;font-size:15px}
+button{border:0;border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer;background:#fff;color:#0f766e;font-weight:600}
+button.p{background:#0f766e;color:#fff}#map{flex:1}
+#panel{position:fixed;right:12px;bottom:12px;width:min(380px,calc(100% - 24px));max-height:65vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 8px 30px #0003;padding:14px;z-index:1000;display:none}
+#panel h2{margin:0 0 4px;font-size:17px}.muted{color:#6b7280;font-size:13px}.code{font-family:monospace;font-size:20px;font-weight:700}
+.c{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0}.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;color:#fff}
+.vote{background:#f3f4f6;color:#111;margin-right:6px}input,textarea{width:100%;padding:9px;border:1px solid #d1d5db;border-radius:8px;margin:4px 0 8px;font-size:15px;font-family:inherit}
+.x{float:right;background:none;color:#555;padding:0 4px}#results div{padding:8px;border-bottom:1px solid #eee;cursor:pointer}#banner{background:#fef3c7;font-size:12px;padding:4px 14px}
+</style></head><body>
+<header><h1>🚻 CodeLoo</h1><input id="q" placeholder="Search store, place or address…"><button id="go">Search</button><button id="loc">📍 My location</button><button id="add">＋ Add</button></header>
+<div id="banner">Crowdsourced &amp; unverified. Entries marked EXAMPLE are demo data, not real codes. Tip: click the map to drop a pin when adding.</div>
+<div id="map"></div><div id="panel"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map').setView([37.775,-122.418],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+const P=document.getElementById('panel'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+let data=[],layer=L.layerGroup().addTo(map),pin=null,adding=false;
+const ago=t=>{const s=Date.now()/1000-t;return s<3600?Math.max(1,Math.round(s/60))+'m ago':s<86400?Math.round(s/3600)+'h ago':Math.round(s/86400)+'d ago'};
+function conf(c){const n=c.up+c.down,ratio=(c.up+1)/(n+2),last=c.last_up||c.created,age=(Date.now()/1000-last)/86400,score=ratio*Math.exp(-age/30);
+ return score>.55?['High','#16a34a']:score>.3?['Medium','#d97706']:['Low','#dc2626']}
+const show=()=>P.style.display='block',hide=()=>{P.style.display='none';adding=false;if(pin){map.removeLayer(pin);pin=null}};
+async function load(){data=await (await fetch('api/restrooms')).json();layer.clearLayers();
+ data.forEach(r=>{const[cl,col]=conf(r.codes[0]);L.circleMarker([r.lat,r.lng],{radius:10,color:'#fff',weight:2,fillColor:col,fillOpacity:1}).addTo(layer).on('click',()=>detail(r.id))})}
+function detail(id){const r=data.find(x=>x.id==id);if(!r)return;adding=false;
+ P.innerHTML=`<button class="x" onclick="hide()">✕</button><h2>${esc(r.name)}</h2><div class="muted">${esc(r.address)}</div>${r.notes?`<p>📝 ${esc(r.notes)}</p>`:''}`+
+ r.codes.map((c,i)=>{const[cl,col]=conf(c);return `<div class="c"><span class="code">${esc(c.code)}</span> <span class="badge" style="background:${col}">${cl} confidence</span>${i?' <span class="muted">(older)</span>':''}
+ <div class="muted">Added ${ago(c.created)}${c.last_up?' · last confirmed '+ago(c.last_up):''}</div>
+ <div style="margin-top:6px"><button class="vote" onclick="vote(${c.id},'up',${r.id})">👍 Still works (${c.up})</button><button class="vote" onclick="vote(${c.id},'down',${r.id})">👎 Didn't work (${c.down})</button></div></div>`}).join('')+
+ `<input id="nc" placeholder="Report a new code"><button class="p" onclick="newCode(${r.id})">Submit new code</button>`;show()}
+async function vote(id,d,rid){await fetch(`api/codes/${id}/${d}`,{method:'POST'});await load();detail(rid)}
+async function newCode(rid){const v=document.getElementById('nc').value.trim();if(!v)return;await fetch(`api/restrooms/${rid}/codes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:v})});await load();detail(rid)}
+function setPin(ll){if(pin)pin.setLatLng(ll);else pin=L.marker(ll,{draggable:true}).addTo(map)}
+function addForm(pre={}){adding=true;setPin(pre.ll||map.getCenter());
+ P.innerHTML=`<button class="x" onclick="hide()">✕</button><h2>Add a restroom</h2><div class="muted">Drag the pin or tap the map to set location.</div>
+ <input id="fn" placeholder="Place name (e.g. Target – Main St)" value="${esc(pre.name||'')}"><input id="fa" placeholder="Address" value="${esc(pre.address||'')}">
+ <input id="fc" placeholder="Door code"><textarea id="fo" rows="2" placeholder="Notes: ask cashier, customers only…"></textarea><button class="p" onclick="save()">Save</button> <span id="err" style="color:#dc2626"></span>`;show()}
+async function save(){const ll=pin.getLatLng(),b={name:fn.value,address:fa.value,code:fc.value,notes:fo.value,lat:ll.lat,lng:ll.lng};
+ const r=await fetch('api/restrooms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json();
+ if(!r.ok){err.textContent=j.error;return}hide();await load();detail(j.id)}
+map.on('click',e=>{if(adding)setPin(e.latlng)});
+async function search(){const q=document.getElementById('q').value.trim();if(!q)return;
+ const local=data.filter(r=>(r.name+' '+r.address).toLowerCase().includes(q.toLowerCase()));
+ let geo=[];try{geo=await (await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&q='+encodeURIComponent(q))).json()}catch(e){}
+ window._geo=geo;P.innerHTML=`<button class="x" onclick="hide()">✕</button><h2>Results</h2><div id="results">`+
+ local.map(r=>`<div onclick="map.setView([${r.lat},${r.lng}],17);detail(${r.id})">🚻 <b>${esc(r.name)}</b><br><span class="muted">${esc(r.address)}</span></div>`).join('')+
+ geo.map((g,i)=>`<div onclick="pick(${i})">📍 ${esc(g.display_name)}</div>`).join('')+(local.length||geo.length?'':'<p class="muted">No results.</p>')+'</div>';show()}
+function pick(i){const g=_geo[i],ll=[+g.lat,+g.lon];map.setView(ll,17);P.innerHTML=`<button class="x" onclick="hide()">✕</button><h2>${esc(g.display_name.split(',')[0])}</h2><div class="muted">${esc(g.display_name)}</div><p>No code here yet?</p><button class="p" id="ah">＋ Add restroom here</button>`;
+ document.getElementById('ah').onclick=()=>addForm({ll:L.latLng(ll),name:g.display_name.split(',')[0],address:g.display_name});show()}
+go.onclick=search;q.onkeydown=e=>{if(e.key=='Enter')search()};add.onclick=()=>addForm();
+loc.onclick=()=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],16);L.circleMarker([p.coords.latitude,p.coords.longitude],{radius:7,color:'#2563eb'}).addTo(map)},()=>alert('Location unavailable')):alert('Geolocation not supported');
+load();
+</script></body></html>

@@ -1,0 +1,5 @@
+.venv/
+*.log
+data.db
+tunnel.py
+__pycache__/
