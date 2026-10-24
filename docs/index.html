@@ -17,14 +17,14 @@ button.p{background:#0f766e;color:#fff}#map{flex:1}
 .x{float:right;background:none;color:#555;padding:0 4px}#results div{padding:8px;border-bottom:1px solid #eee;cursor:pointer}#demo{background:#fde68a;color:#7c2d12;font-size:13px;font-weight:600;padding:6px 14px;display:none}#banner{background:#fef3c7;font-size:12px;padding:4px 14px}
 </style></head><body>
 <header><h1>🚻 CodeLoo</h1><input id="q" placeholder="Search store, place or address…"><button id="go">Search</button><button id="loc">📍 My location</button><button id="add">＋ Add</button></header>
-<div id="demo">⚠️ Demo mode: Supabase not configured. Data is saved only in this browser (localStorage).</div><div id="banner">Crowdsourced &amp; unverified. Entries marked EXAMPLE are demo data, not real codes. Tip: click the map to drop a pin when adding.</div>
+<div id="demo">⚠️ Demo mode: Supabase not configured. Data is saved only in this browser (localStorage).</div><div id="banner">Crowdsourced &amp; unverified. Tip: click the map to drop a pin when adding.</div>
 <div id="map"></div><div id="panel"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="store.js"></script>
 <script>
-const map=L.map('map').setView([37.775,-122.418],13);
+const map=L.map('map').setView([33.112,-117.095],14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 const P=document.getElementById('panel'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 let data=[],layer=L.layerGroup().addTo(map),pin=null,adding=false;

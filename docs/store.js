@@ -18,12 +18,16 @@ if(configured){
     async addCode(pid,code){chk(await sb.from('codes').insert({place_id:pid,code}))},
     async vote(cid,up){chk(await sb.from('votes').insert({code_id:cid,up}))}};
 }else{
-  const KEY='codeloo-demo-v1',ls=window.localStorage;
-  const seed=()=>{const t=now()-86400*3;return{n:10,places:[
-    [1,'EXAMPLE – Coffee Shop (demo)','Market St, San Francisco',37.7897,-122.4011,'Demo entry, not a real code.','1234 (EXAMPLE)'],
-    [2,'EXAMPLE – Grocery Store (demo)','Mission St, San Francisco',37.7599,-122.4148,'Demo entry. Ask cashier.','#5678 (EXAMPLE)'],
-    [3,'EXAMPLE – Bookstore (demo)','Valencia St, San Francisco',37.7648,-122.4216,'Demo entry, not real.','0000* (EXAMPLE)']
-  ].map(([id,name,address,lat,lng,notes,code])=>({id,name,address,lat,lng,notes,created:t,codes:[{id:id+100,code,created:t,up:3,down:1,last_up:t+86400*2}]}))}};
+  const KEY='codeloo-demo-v2',ls=window.localStorage;
+  const seed=()=>{const t=now()-86400;return{n:100,places:[
+    [1, "Aldi", "1352 W Valley Pkwy, Escondido, CA 92029", 33.1127791, -117.1039186, "", "1352#"],
+    [2, "Jimbo's Naturally", "1633 S Centre City Pkwy, Escondido, CA 92025", 33.1042504, -117.0775835, "", "7755"],
+    [3, "Raising Cane's", "1280 W Valley Pkwy, Escondido, CA 92029", 33.1148151, -117.1009867, "Code from user note 'SM'", "54321"],
+    [4, "Wendy's", "1530 W Valley Pkwy, Escondido, CA 92029", 33.1096071, -117.1046716, "", "5505"],
+    [5, "Primos Mexican Food & Cantina", "1348 W Valley Pkwy, Escondido, CA 92029", 33.112299, -117.102936, "", "2805"],
+    [6, "Ding Tea", "1815 E Valley Pkwy Ste 2, Escondido, CA 92027", 33.135699, -117.054732, "", "0198"],
+    [7, "Epic Wings", "1054 W Valley Pkwy, Escondido, CA 92025", 33.1166662, -117.0968408, "", "1432#"]
+  ].map(([id,name,address,lat,lng,notes,code])=>({id,name,address,lat,lng,notes,created:t,codes:[{id:id+50,code,created:t,up:0,down:0,last_up:null}]}))}};
   const get=()=>{try{return JSON.parse(ls.getItem(KEY))||seed()}catch(e){return seed()}},put=d=>ls.setItem(KEY,JSON.stringify(d));
   S={demo:true,
     async list(){const d=get();put(d);return d.places.map(p=>({...p,codes:[...p.codes].sort((a,b)=>b.created-a.created||b.id-a.id)}))},

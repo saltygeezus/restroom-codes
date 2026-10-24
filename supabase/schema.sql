@@ -59,18 +59,24 @@ from public.codes c left join public.votes v on v.code_id = c.id
 group by c.id;
 grant select on public.code_stats to anon, authenticated;
 
--- EXAMPLE seed data: fake codes, not real. Safe to delete.
+-- Seed data: real codes contributed by the app owner (ZIP 92029 area). Inserted once.
 do $$
-declare p bigint; c bigint;
+declare p bigint;
 begin
-  if not exists (select 1 from public.places where name like 'EXAMPLE%') then
-    insert into public.places(name,address,lat,lng,notes) values ('EXAMPLE – Coffee Shop (demo)','Market St, San Francisco',37.7897,-122.4011,'Demo entry, not a real code.') returning id into p;
-    insert into public.codes(place_id,code) values (p,'1234 (EXAMPLE)') returning id into c;
-    insert into public.votes(code_id,up) values (c,true),(c,true),(c,false);
-    insert into public.places(name,address,lat,lng,notes) values ('EXAMPLE – Grocery Store (demo)','Mission St, San Francisco',37.7599,-122.4148,'Demo entry. Ask cashier.') returning id into p;
-    insert into public.codes(place_id,code) values (p,'#5678 (EXAMPLE)') returning id into c;
-    insert into public.votes(code_id,up) values (c,true);
-    insert into public.places(name,address,lat,lng,notes) values ('EXAMPLE – Bookstore (demo)','Valencia St, San Francisco',37.7648,-122.4216,'Demo entry, not real.') returning id into p;
-    insert into public.codes(place_id,code) values (p,'0000* (EXAMPLE)');
+  if not exists (select 1 from public.places) then
+    insert into public.places(name,address,lat,lng,notes) values ('Aldi','1352 W Valley Pkwy, Escondido, CA 92029',33.1127791,-117.1039186,'') returning id into p;
+    insert into public.codes(place_id,code) values (p,'1352#');
+    insert into public.places(name,address,lat,lng,notes) values ('Jimbo''s Naturally','1633 S Centre City Pkwy, Escondido, CA 92025',33.1042504,-117.0775835,'') returning id into p;
+    insert into public.codes(place_id,code) values (p,'7755');
+    insert into public.places(name,address,lat,lng,notes) values ('Raising Cane''s','1280 W Valley Pkwy, Escondido, CA 92029',33.1148151,-117.1009867,'Code from user note ''SM''') returning id into p;
+    insert into public.codes(place_id,code) values (p,'54321');
+    insert into public.places(name,address,lat,lng,notes) values ('Wendy''s','1530 W Valley Pkwy, Escondido, CA 92029',33.1096071,-117.1046716,'') returning id into p;
+    insert into public.codes(place_id,code) values (p,'5505');
+    insert into public.places(name,address,lat,lng,notes) values ('Primos Mexican Food & Cantina','1348 W Valley Pkwy, Escondido, CA 92029',33.112299,-117.102936,'') returning id into p;
+    insert into public.codes(place_id,code) values (p,'2805');
+    insert into public.places(name,address,lat,lng,notes) values ('Ding Tea','1815 E Valley Pkwy Ste 2, Escondido, CA 92027',33.135699,-117.054732,'') returning id into p;
+    insert into public.codes(place_id,code) values (p,'0198');
+    insert into public.places(name,address,lat,lng,notes) values ('Epic Wings','1054 W Valley Pkwy, Escondido, CA 92025',33.1166662,-117.0968408,'') returning id into p;
+    insert into public.codes(place_id,code) values (p,'1432#');
   end if;
 end $$;

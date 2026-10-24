@@ -5,7 +5,7 @@ Data lives in Supabase (supabase-js from CDN, anon key + Row Level Security).
 
 ## Setup Supabase
 1. Create a project at supabase.com.
-2. SQL Editor → run `supabase/schema.sql` (tables `places`, `codes`, `votes`, view `code_stats`, RLS: anon may select/insert only; 3 EXAMPLE seed rows with fake codes).
+2. SQL Editor → run `supabase/schema.sql` (tables `places`, `codes`, `votes`, view `code_stats`, RLS: anon may select/insert only; 7 real seed codes near ZIP 92029).
 3. Project Settings → API: copy **Project URL** and **anon public** key into `docs/config.js`. Never use the service_role key.
 4. Commit & push; Pages redeploys.
 
